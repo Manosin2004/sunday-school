@@ -1,10 +1,11 @@
 const mysql = require('mysql2/promise');
+
 const pool = mysql.createPool({
-  host: 'sunday-school-db-backlinksdentalium-1991.h.aivencloud.com',
-  port: 16046,
-  user: 'avnadmin',
-  password: 'AVNS_P_PoBlOOauniC47fm3V',
-  database: 'defaultdb',
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
   ssl: { rejectUnauthorized: false },
   waitForConnections: true,
   connectionLimit: 10,
