@@ -96,8 +96,10 @@ const submit = async () => {
     }
   }
   const edit = (s) => {
+    // Format date for input field (YYYY-MM-DD)
     let formattedDob = ''
     if (s.dob) {
+      // If dob has time part, extract only the date
       const datePart = s.dob.split('T')[0]
       formattedDob = datePart
     }
@@ -111,17 +113,20 @@ const submit = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Format date for display
+  // Format date for display - FIXES THE T00:00:00.000Z ISSUE
   const formatDate = (dateStr) => {
     if (!dateStr) return '—'
     try {
+      // If it's already in YYYY-MM-DD format
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr
       }
+      // If it has time part, extract only date
       const datePart = dateStr.split('T')[0]
       if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return datePart
       }
+      // Try to create date object
       const date = new Date(dateStr)
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear()
@@ -258,7 +263,7 @@ const submit = async () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - WITH MOBILE MENU */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -287,6 +292,7 @@ const submit = async () => {
           </span>
         </div>
 
+        {/* Hamburger Menu Button - FOR MOBILE */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           style={{
@@ -304,6 +310,7 @@ const submit = async () => {
           {isMobileMenuOpen ? '✕' : '☰'}
         </button>
 
+        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -353,6 +360,7 @@ const submit = async () => {
           ))}
         </div>
 
+        {/* Mobile Navigation Menu - DROPDOWN */}
         {isMobileMenuOpen && (
           <div style={{
             position: 'absolute',
@@ -443,9 +451,7 @@ const submit = async () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             color: 'white',
-            boxShadow: '0 10px 40px rgba(5, 150, 105, 0.3)',
-            flexWrap: 'wrap',
-            gap: '1rem'
+            boxShadow: '0 10px 40px rgba(5, 150, 105, 0.3)'
           }}>
             <div style={{
               display: 'flex',
@@ -516,9 +522,7 @@ const submit = async () => {
               alignItems: 'center',
               marginBottom: '1.25rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #f1f5f9',
-              flexWrap: 'wrap',
-              gap: '0.5rem'
+              borderBottom: '2px solid #f1f5f9'
             }}>
               <h2 style={{
                 display: 'flex',
@@ -849,91 +853,79 @@ const submit = async () => {
                 <p>Start by adding your first student using the form above</p>
               </div>
             ) : (
-              <div style={{ 
-                overflowX: 'auto',
-                WebkitOverflowScrolling: 'touch',
-                margin: '0 -0.5rem',
-                padding: '0 0.5rem'
-              }}>
+              <div style={{ overflowX: 'auto' }}>
                 <table style={{
                   width: '100%',
                   borderCollapse: 'collapse',
-                  minWidth: '650px',
-                  fontSize: 'clamp(0.75rem, 1vw, 0.875rem)'
+                  minWidth: '600px'
                 }}>
                   <thead>
                     <tr>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>#</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>Name</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>Class</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>DOB</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>Phone</th>
                       <th style={{
                         textAlign: 'center',
-                        padding: '0.75rem 0.75rem',
+                        padding: '0.75rem 1rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
-                        fontSize: 'clamp(0.65rem, 0.8vw, 0.75rem)',
+                        fontSize: '0.75rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
-                        borderBottom: '2px solid #e2e8f0',
-                        whiteSpace: 'nowrap'
+                        borderBottom: '2px solid #e2e8f0'
                       }}>Actions</th>
                     </tr>
                   </thead>
@@ -946,110 +938,91 @@ const submit = async () => {
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
                         <td style={{
-                          padding: '0.75rem 0.75rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
                           fontWeight: 600,
-                          color: '#94a3b8',
-                          fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)'
+                          color: '#94a3b8'
                         }}>{i + 1}</td>
                         <td style={{
-                          padding: '0.75rem 0.75rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
-                          fontWeight: 500,
-                          fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
-                          maxWidth: '120px',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
+                          fontWeight: 500
                         }}>
                           <span style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px'
+                            gap: '8px'
                           }}>
                             <span style={{
                               background: 'linear-gradient(135deg, #059669, #34d399)',
                               color: 'white',
-                              width: 'clamp(28px, 3vw, 32px)',
-                              height: 'clamp(28px, 3vw, 32px)',
+                              width: '32px',
+                              height: '32px',
                               borderRadius: '50%',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: 'clamp(0.6rem, 0.8vw, 0.8rem)',
+                              fontSize: '0.8rem',
                               flexShrink: 0
                             }}>
                               {s.name.charAt(0).toUpperCase()}
                             </span>
-                            <span style={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }}>
-                              {s.name}
-                            </span>
+                            {s.name}
                           </span>
                         </td>
                         <td style={{
-                          padding: '0.75rem 0.75rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
-                          verticalAlign: 'middle',
-                          fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)'
+                          verticalAlign: 'middle'
                         }}>
                           <span style={{
                             background: '#dbeafe',
                             color: '#1e40af',
-                            padding: '0.2rem 0.6rem',
+                            padding: '0.25rem 0.75rem',
                             borderRadius: '20px',
-                            fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)',
+                            fontSize: '0.75rem',
                             fontWeight: 500,
-                            display: 'inline-block',
-                            whiteSpace: 'nowrap'
+                            display: 'inline-block'
                           }}>
                             {s.class_name}
                           </span>
                         </td>
                         <td style={{
-                          padding: '0.75rem 0.75rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
-                          color: '#64748b',
-                          fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
-                          whiteSpace: 'nowrap'
+                          color: '#64748b'
                         }}>
                           {formatDate(s.dob)}
                         </td>
                         <td style={{
-                          padding: '0.75rem 0.75rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
-                          color: '#64748b',
-                          fontSize: 'clamp(0.7rem, 0.9vw, 0.8rem)',
-                          whiteSpace: 'nowrap'
+                          color: '#64748b'
                         }}>
                           {s.phone || '—'}
                         </td>
                         <td style={{
-                          padding: '0.75rem 0.5rem',
+                          padding: '0.75rem 1rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap'
+                          textAlign: 'center'
                         }}>
                           <button 
                             style={{
                               background: '#dbeafe',
                               color: '#1e40af',
-                              padding: '0.2rem 0.6rem',
+                              padding: '0.25rem 0.875rem',
                               border: 'none',
-                              borderRadius: '4px',
-                              fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
                               fontWeight: 600,
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
-                              marginRight: '0.3rem',
+                              marginRight: '0.5rem',
                               touchAction: 'manipulation'
                             }}
                             onClick={() => edit(s)}
@@ -1062,16 +1035,16 @@ const submit = async () => {
                               e.currentTarget.style.transform = 'scale(1)'
                             }}
                           >
-                            ✏️
+                            ✏️ Edit
                           </button>
                           <button 
                             style={{
                               background: '#fee2e2',
                               color: '#dc2626',
-                              padding: '0.2rem 0.6rem',
+                              padding: '0.25rem 0.875rem',
                               border: 'none',
-                              borderRadius: '4px',
-                              fontSize: 'clamp(0.6rem, 0.8vw, 0.75rem)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
                               fontWeight: 600,
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
@@ -1087,7 +1060,7 @@ const submit = async () => {
                               e.currentTarget.style.transform = 'scale(1)'
                             }}
                           >
-                            🗑️
+                            🗑️ Delete
                           </button>
                         </td>
                       </tr>
@@ -1105,6 +1078,7 @@ const submit = async () => {
       {/* ======================================== */}
       {showConfirm && (
         <>
+          {/* Backdrop */}
           <div
             onClick={cancelDelete}
             style={{
@@ -1120,6 +1094,7 @@ const submit = async () => {
             }}
           />
 
+          {/* Dialog */}
           <div
             style={{
               position: 'fixed',
@@ -1136,6 +1111,7 @@ const submit = async () => {
               animation: 'scaleIn 0.3s ease'
             }}
           >
+            {/* Icon */}
             <div style={{
               width: '64px',
               height: '64px',
@@ -1151,6 +1127,7 @@ const submit = async () => {
               🗑️
             </div>
 
+            {/* Title */}
             <h3 style={{
               textAlign: 'center',
               fontSize: 'clamp(18px, 2.5vw, 20px)',
@@ -1161,6 +1138,7 @@ const submit = async () => {
               Delete Student
             </h3>
 
+            {/* Message */}
             <p style={{
               textAlign: 'center',
               fontSize: 'clamp(13px, 1.5vw, 14px)',
@@ -1172,6 +1150,7 @@ const submit = async () => {
               This action cannot be undone.
             </p>
 
+            {/* Buttons */}
             <div style={{
               display: 'flex',
               gap: '10px',
@@ -1302,17 +1281,6 @@ const submit = async () => {
           .confirm-buttons button {
             width: 100% !important;
           }
-          
-          /* Table mobile optimizations */
-          table {
-            font-size: 0.7rem !important;
-          }
-          table th, table td {
-            padding: 0.5rem 0.4rem !important;
-          }
-          table th {
-            font-size: 0.6rem !important;
-          }
         }
         
         @media (min-width: 769px) {
@@ -1350,7 +1318,7 @@ const submit = async () => {
         }
         ::-webkit-scrollbar-thumb {
           background: linear-gradient(135deg, #059669, #34d399);
-          border-radius: 10px;
+          borderRadius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(135deg, #047857, #10b981);
