@@ -9,6 +9,7 @@ export default function Reports() {
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
   const navigate = useNavigate()
 
   // Get current time
@@ -26,7 +27,7 @@ export default function Reports() {
   }, [])
 
   const navItems = [
-   { path: '/', label: 'Dashboard', icon: '📊' },
+    { path: '/', label: 'Dashboard', icon: '📊' },
     { path: '/classes', label: 'Classes', icon: '🏫' },
     { path: '/students', label: 'Students', icon: '👦' },
     { path: '/attendance', label: 'Attendance', icon: '📋' },
@@ -85,7 +86,7 @@ export default function Reports() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - WITH MOBILE MENU */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -97,7 +98,8 @@ export default function Reports() {
         justifyContent: 'space-between',
         flexShrink: 0,
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        zIndex: 100
+        zIndex: 100,
+        position: 'relative'
       }}>
         <div style={{
           display: 'flex',
@@ -113,6 +115,25 @@ export default function Reports() {
           </span>
         </div>
 
+        {/* Hamburger Menu Button - FOR MOBILE */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            color: '#1e293b',
+            touchAction: 'manipulation'
+          }}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? '✕' : '☰'}
+        </button>
+
+        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -121,7 +142,8 @@ export default function Reports() {
           flex: 1,
           justifyContent: 'center',
           padding: '0 0.5rem'
-        }}>
+        }}
+        className="desktop-nav">
           {navItems.map((item, index) => (
             <button
               key={index}
@@ -160,6 +182,55 @@ export default function Reports() {
             </button>
           ))}
         </div>
+
+        {/* Mobile Navigation Menu - DROPDOWN */}
+        {isMobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'white',
+            padding: '0.5rem',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            zIndex: 200
+          }}
+          className="mobile-nav">
+            {navItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  navigate(item.path)
+                  setIsMobileMenuOpen(false)
+                }}
+                style={{
+                  background: item.active ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                  color: item.active ? 'white' : '#64748b',
+                  border: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: item.active ? 600 : 500,
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontFamily: 'inherit',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{
           display: 'flex',
@@ -275,7 +346,8 @@ export default function Reports() {
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
               marginBottom: '1rem'
-            }}>
+            }}
+            className="filter-grid">
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -301,7 +373,9 @@ export default function Reports() {
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
                     background: '#f8fafc',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#7c3aed'
@@ -345,7 +419,9 @@ export default function Reports() {
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
                     background: '#f8fafc',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#7c3aed'
@@ -387,7 +463,8 @@ export default function Reports() {
                   alignItems: 'center',
                   gap: '8px',
                   opacity: loading ? 0.7 : 1,
-                  flex: 1
+                  flex: 1,
+                  touchAction: 'manipulation'
                 }}
                 onMouseEnter={e => {
                   if (!loading) {
@@ -418,7 +495,8 @@ export default function Reports() {
                     transition: 'all 0.3s ease',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    touchAction: 'manipulation'
                   }}
                   onMouseEnter={e => {
                     e.currentTarget.style.transform = 'translateY(-2px)'
@@ -442,7 +520,8 @@ export default function Reports() {
               gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
               gap: '1rem',
               marginBottom: '1.5rem'
-            }}>
+            }}
+            className="stats-grid">
               <div style={{
                 background: 'white',
                 borderRadius: '12px',
@@ -566,7 +645,8 @@ export default function Reports() {
                   gap: '8px',
                   margin: 0,
                   fontSize: 'clamp(1rem, 1.5vw, 1.2rem)',
-                  color: '#1e293b'
+                  color: '#1e293b',
+                  flexWrap: 'wrap'
                 }}>
                   📋 Attendance Records
                   {selectedClass && (
@@ -624,13 +704,14 @@ export default function Reports() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{
                     width: '100%',
-                    borderCollapse: 'collapse'
+                    borderCollapse: 'collapse',
+                    minWidth: '400px'
                   }}>
                     <thead>
                       <tr>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -641,7 +722,7 @@ export default function Reports() {
                         }}>#</th>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -652,7 +733,7 @@ export default function Reports() {
                         }}>Student Name</th>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -663,7 +744,7 @@ export default function Reports() {
                         }}>Date</th>
                         <th style={{
                           textAlign: 'center',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -685,14 +766,14 @@ export default function Reports() {
                           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                           >
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               fontWeight: 600,
                               color: '#94a3b8'
                             }}>{i + 1}</td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               fontWeight: 500
@@ -719,7 +800,7 @@ export default function Reports() {
                               </span>
                             </td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               color: '#64748b'
@@ -727,7 +808,7 @@ export default function Reports() {
                               {r.date}
                             </td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               textAlign: 'center'
@@ -791,10 +872,21 @@ export default function Reports() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        
+        /* Mobile Styles */
         @media (max-width: 768px) {
-          nav {
-            overflow-x: auto;
+          .desktop-nav {
+            display: none !important;
           }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: flex !important;
+          }
+          
+          .mobile-nav {
+            display: flex !important;
+          }
+          
           .filter-grid {
             grid-template-columns: 1fr !important;
           }
@@ -802,6 +894,17 @@ export default function Reports() {
             grid-template-columns: repeat(2, 1fr) !important;
           }
         }
+        
+        @media (min-width: 769px) {
+          .mobile-nav {
+            display: none !important;
+          }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: none !important;
+          }
+        }
+        
         @media (max-width: 480px) {
           .page-header {
             flex-direction: column !important;
@@ -825,6 +928,15 @@ export default function Reports() {
         }
         ::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(135deg, #6d28d9, #8b5cf6);
+        }
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        button {
+          touch-action: manipulation;
+        }
+        input, select {
+          font-size: 16px !important;
         }
       `}</style>
     </div>
