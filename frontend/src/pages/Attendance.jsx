@@ -12,7 +12,7 @@ export default function Attendance() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   // Get current time
@@ -72,37 +72,62 @@ export default function Attendance() {
     if (classId) loadStudents(classId, d) 
   }
 
-  const toggle = (id) => {
+  // Auto-save function - saves a single student's attendance
+  const autoSave = async (studentId, status, notes) => {
+    if (!classId) return
+    
+    try {
+      const record = {
+        student_id: studentId,
+        date: date,
+        status: status,
+        notes: notes || ''
+      }
+      await api.post('/attendance.php', [record])
+      // Show a brief success message
+      showMessage('Attendance saved! ✅', 'success')
+    } catch (error) {
+      showMessage('Failed to save attendance', 'error')
+    }
+  }
+
+  // Toggle status and auto-save
+  const toggle = async (id) => {
+    const currentStatus = attendance[id]?.status || 'absent'
+    const newStatus = currentStatus === 'present' ? 'absent' : 'present'
+    const currentNotes = attendance[id]?.notes || ''
+    
+    // Update local state immediately
     setAttendance(a => ({ 
       ...a, 
       [id]: { 
         ...a[id], 
-        status: a[id]?.status === 'present' ? 'absent' : 'present' 
+        status: newStatus,
+        notes: currentNotes
       } 
     }))
+    
+    // Auto-save to database
+    await autoSave(id, newStatus, currentNotes)
   }
 
-  const save = async () => {
-    if (!classId) {
-      showMessage('Please select a class first', 'error')
-      return
-    }
+  // Save notes with debounce
+  let notesTimeout = null
+  const saveNotes = (id, value) => {
+    // Update local state immediately
+    setAttendance(a => ({
+      ...a,
+      [id]: { ...a[id], notes: value }
+    }))
     
-    setSaving(true)
-    try {
-      const records = students.map(s => ({ 
-        student_id: s.id, 
-        date, 
-        status: attendance[s.id]?.status || 'absent', 
-        notes: attendance[s.id]?.notes || '' 
-      }))
-      await api.post('/attendance.php', records)
-      showMessage('Attendance saved successfully! ✅', 'success')
-    } catch (error) {
-      showMessage('Failed to save attendance', 'error')
-    } finally {
-      setSaving(false)
-    }
+    // Clear previous timeout
+    if (notesTimeout) clearTimeout(notesTimeout)
+    
+    // Save after 1 second of no typing
+    notesTimeout = setTimeout(async () => {
+      const status = attendance[id]?.status || 'absent'
+      await autoSave(id, status, value)
+    }, 1000)
   }
 
   const showMessage = (text, type = 'success') => {
@@ -127,7 +152,7 @@ export default function Attendance() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar - WITH MOBILE MENU */}
+      {/* Top Navigation Bar */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -156,7 +181,6 @@ export default function Attendance() {
           </span>
         </div>
 
-        {/* Hamburger Menu Button - FOR MOBILE */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           style={{
@@ -174,7 +198,6 @@ export default function Attendance() {
           {isMobileMenuOpen ? '✕' : '☰'}
         </button>
 
-        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -224,7 +247,6 @@ export default function Attendance() {
           ))}
         </div>
 
-        {/* Mobile Navigation Menu - DROPDOWN */}
         {isMobileMenuOpen && (
           <div style={{
             position: 'absolute',
@@ -305,7 +327,7 @@ export default function Attendance() {
           position: 'relative',
           zIndex: 1
         }}>
-          {/* Page Header - Blue Theme */}
+          {/* Page Header */}
           <div style={{
             background: 'linear-gradient(135deg, #4f46e5 0%, #818cf8 100%)',
             borderRadius: '16px',
@@ -315,7 +337,9 @@ export default function Attendance() {
             justifyContent: 'space-between',
             alignItems: 'center',
             color: 'white',
-            boxShadow: '0 10px 40px rgba(79, 70, 229, 0.3)'
+            boxShadow: '0 10px 40px rgba(79, 70, 229, 0.3)',
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
             <div style={{
               display: 'flex',
@@ -344,7 +368,7 @@ export default function Attendance() {
                   opacity: 0.9,
                   fontSize: 'clamp(0.7rem, 1vw, 0.9rem)'
                 }}>
-                  Track daily attendance for students
+                  Tap Present/Absent to auto-save
                 </p>
               </div>
             </div>
@@ -531,65 +555,26 @@ export default function Attendance() {
                   gap: '12px',
                   flexWrap: 'wrap'
                 }}>
-                  <div style={{
+                  <span style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    flexWrap: 'wrap'
+                    gap: '4px',
+                    fontSize: '0.8rem',
+                    color: '#059669',
+                    fontWeight: 600
                   }}>
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.8rem',
-                      color: '#059669',
-                      fontWeight: 600
-                    }}>
-                      ✅ {presentCount} Present
-                    </span>
-                    <span style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '0.8rem',
-                      color: '#dc2626',
-                      fontWeight: 600
-                    }}>
-                      ❌ {students.length - presentCount} Absent
-                    </span>
-                  </div>
-                  <button 
-                    style={{
-                      background: 'linear-gradient(135deg, #4f46e5, #818cf8)',
-                      color: 'white',
-                      padding: '0.4rem 1.2rem',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      opacity: saving ? 0.7 : 1,
-                      touchAction: 'manipulation'
-                    }}
-                    onClick={save}
-                    disabled={saving}
-                    onMouseEnter={e => {
-                      if (!saving) {
-                        e.currentTarget.style.transform = 'translateY(-2px)'
-                        e.currentTarget.style.boxShadow = '0 8px 24px rgba(79, 70, 229, 0.3)'
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    {saving ? '⏳ Saving...' : '💾 Save Attendance'}
-                  </button>
+                    ✅ {presentCount} Present
+                  </span>
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.8rem',
+                    color: '#dc2626',
+                    fontWeight: 600
+                  }}>
+                    ❌ {students.length - presentCount} Absent
+                  </span>
                 </div>
               </div>
 
@@ -611,7 +596,10 @@ export default function Attendance() {
                   <p style={{ marginTop: '0.75rem' }}>Loading students...</p>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ 
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
                   <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
@@ -754,10 +742,7 @@ export default function Attendance() {
                               <input
                                 placeholder="Add notes..."
                                 value={attendance[s.id]?.notes || ''}
-                                onChange={e => setAttendance(a => ({
-                                  ...a,
-                                  [s.id]: { ...a[s.id], notes: e.target.value }
-                                }))}
+                                onChange={e => saveNotes(s.id, e.target.value)}
                                 style={{
                                   width: '100%',
                                   padding: '0.4rem 0.75rem',
@@ -855,7 +840,6 @@ export default function Attendance() {
           to { transform: rotate(360deg); }
         }
         
-        /* Mobile Styles */
         @media (max-width: 768px) {
           .desktop-nav {
             display: none !important;
