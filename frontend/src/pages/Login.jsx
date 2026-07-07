@@ -203,7 +203,7 @@ export default function Login({ onLogin }) {
           }}>📧</span>
           <input
             type="email"
-            placeholder="Email Address"
+            placeholder="username"
             value={form.username}
             onChange={e => setForm({ ...form, username: e.target.value })}
             onKeyDown={handleKeyPress}
