@@ -10,6 +10,8 @@ export default function Reports() {
   const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [filterType, setFilterType] = useState('month') // 'month' or 'date'
+  const [singleDate, setSingleDate] = useState('')
   const navigate = useNavigate()
 
   // Get current time
@@ -46,7 +48,16 @@ export default function Reports() {
     }
     setLoading(true)
     try {
-      const r = await api.get(`/attendance.php?report=1&class_id=${classId}&month=${month}`)
+      let url = `/attendance.php?report=1&class_id=${classId}`
+      
+      if (filterType === 'month') {
+        url += `&month=${month}`
+      } else {
+        // Single date filter
+        if (singleDate) url += `&date=${singleDate}`
+      }
+      
+      const r = await api.get(url)
       setRecords(r.data)
     } catch (error) {
       alert('Failed to load report')
@@ -62,24 +73,27 @@ export default function Reports() {
     const a = document.createElement('a')
     a.href = 'data:text/csv,' + encodeURIComponent(csv)
     const className = classes.find(c => c.id == classId)?.class_name || 'class'
-    a.download = `attendance_${className}_${months[month-1]}.csv`
+    let filename = `attendance_${className}`
+    if (filterType === 'month') {
+      filename += `_${months[month-1]}`
+    } else {
+      filename += `_${singleDate}`
+    }
+    a.download = `${filename}.csv`
     a.click()
   }
 
-  // Format date for display - removes time part
+  // Format date for display
   const formatDate = (dateStr) => {
     if (!dateStr) return '—'
     try {
-      // If it's already in YYYY-MM-DD format
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr
       }
-      // If it has time part, extract only date
       const datePart = dateStr.split('T')[0]
       if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return datePart
       }
-      // Try to create date object
       const date = new Date(dateStr)
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear()
@@ -367,6 +381,51 @@ export default function Reports() {
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
             transition: 'box-shadow 0.3s ease'
           }}>
+            {/* Filter Type Toggle */}
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              marginBottom: '1rem',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={() => setFilterType('month')}
+                style={{
+                  padding: '0.4rem 1.2rem',
+                  border: '2px solid',
+                  borderColor: filterType === 'month' ? '#7c3aed' : '#e2e8f0',
+                  borderRadius: '8px',
+                  background: filterType === 'month' ? '#7c3aed' : 'transparent',
+                  color: filterType === 'month' ? 'white' : '#475569',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  touchAction: 'manipulation'
+                }}
+              >
+                📅 By Month
+              </button>
+              <button
+                onClick={() => setFilterType('date')}
+                style={{
+                  padding: '0.4rem 1.2rem',
+                  border: '2px solid',
+                  borderColor: filterType === 'date' ? '#7c3aed' : '#e2e8f0',
+                  borderRadius: '8px',
+                  background: filterType === 'date' ? '#7c3aed' : 'transparent',
+                  color: filterType === 'date' ? 'white' : '#475569',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  touchAction: 'manipulation'
+                }}
+              >
+                📆 By Date
+              </button>
+            </div>
+
             <div style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
@@ -420,51 +479,96 @@ export default function Reports() {
                   ))}
                 </select>
               </div>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px'
-              }}>
-                <label style={{
+
+              {filterType === 'month' ? (
+                <div style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  color: '#475569'
+                  flexDirection: 'column',
+                  gap: '6px'
                 }}>
-                  📅 Select Month
-                </label>
-                <select
-                  value={month}
-                  onChange={e => setMonth(Number(e.target.value))}
-                  style={{
-                    padding: '0.625rem 0.875rem',
-                    border: '2px solid #e2e8f0',
-                    borderRadius: '8px',
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
                     fontSize: '0.875rem',
-                    transition: 'all 0.3s ease',
-                    background: '#f8fafc',
-                    cursor: 'pointer',
-                    width: '100%',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={e => {
-                    e.target.style.borderColor = '#7c3aed'
-                    e.target.style.background = 'white'
-                    e.target.style.boxShadow = '0 0 0 4px rgba(124, 58, 237, 0.1)'
-                  }}
-                  onBlur={e => {
-                    e.target.style.borderColor = '#e2e8f0'
-                    e.target.style.background = '#f8fafc'
-                    e.target.style.boxShadow = 'none'
-                  }}
-                >
-                  {months.map((m, i) => (
-                    <option key={i + 1} value={i + 1}>{m}</option>
-                  ))}
-                </select>
-              </div>
+                    fontWeight: 600,
+                    color: '#475569'
+                  }}>
+                    📅 Select Month
+                  </label>
+                  <select
+                    value={month}
+                    onChange={e => setMonth(Number(e.target.value))}
+                    style={{
+                      padding: '0.625rem 0.875rem',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.3s ease',
+                      background: '#f8fafc',
+                      cursor: 'pointer',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#7c3aed'
+                      e.target.style.background = 'white'
+                      e.target.style.boxShadow = '0 0 0 4px rgba(124, 58, 237, 0.1)'
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.background = '#f8fafc'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  >
+                    {months.map((m, i) => (
+                      <option key={i + 1} value={i + 1}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    color: '#475569'
+                  }}>
+                    📅 Select Date
+                  </label>
+                  <input
+                    type="date"
+                    value={singleDate}
+                    onChange={e => setSingleDate(e.target.value)}
+                    style={{
+                      padding: '0.625rem 0.875rem',
+                      border: '2px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      transition: 'all 0.3s ease',
+                      background: '#f8fafc',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={e => {
+                      e.target.style.borderColor = '#7c3aed'
+                      e.target.style.background = 'white'
+                      e.target.style.boxShadow = '0 0 0 4px rgba(124, 58, 237, 0.1)'
+                    }}
+                    onBlur={e => {
+                      e.target.style.borderColor = '#e2e8f0'
+                      e.target.style.background = '#f8fafc'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div style={{
@@ -687,16 +791,29 @@ export default function Reports() {
                       {selectedClass.class_name}
                     </span>
                   )}
-                  <span style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 500,
-                    color: '#d97706',
-                    background: '#fef3c7',
-                    padding: '0.2rem 0.75rem',
-                    borderRadius: '20px'
-                  }}>
-                    {months[month - 1]}
-                  </span>
+                  {filterType === 'month' ? (
+                    <span style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: '#d97706',
+                      background: '#fef3c7',
+                      padding: '0.2rem 0.75rem',
+                      borderRadius: '20px'
+                    }}>
+                      {months[month - 1]}
+                    </span>
+                  ) : (
+                    <span style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 500,
+                      color: '#d97706',
+                      background: '#fef3c7',
+                      padding: '0.2rem 0.75rem',
+                      borderRadius: '20px'
+                    }}>
+                      {singleDate || 'Select Date'}
+                    </span>
+                  )}
                 </h2>
                 <span style={{
                   fontSize: '0.8rem',
@@ -879,7 +996,7 @@ export default function Reports() {
                 margin: '0.75rem 0 0.5rem 0',
                 color: '#64748b'
               }}>No Records Found</h3>
-              <p>Select a class and month, then click "View Report"</p>
+              <p>Select a class and filter, then click "View Report"</p>
             </div>
           )}
         </div>
