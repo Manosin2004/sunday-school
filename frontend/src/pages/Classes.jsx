@@ -9,6 +9,7 @@ export default function Classes() {
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   // Confirmation Dialog States
   const [showConfirm, setShowConfirm] = useState(false)
@@ -103,6 +104,12 @@ export default function Classes() {
   const cancelDelete = () => {
     setShowConfirm(false)
     setDeleteTarget(null)
+  }
+
+  // Handle navigation
+  const handleNavigation = (path) => {
+    navigate(path)
+    setIsMobileMenuOpen(false)
   }
 
   if (loading) {
@@ -205,50 +212,73 @@ export default function Classes() {
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.3)',
-        padding: '0 clamp(1rem, 2vw, 2rem)',
+        padding: '0 clamp(0.5rem, 1.5vw, 2rem)',
         height: 'clamp(60px, 7vh, 70px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexShrink: 0,
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        zIndex: 100
+        zIndex: 100,
+        position: 'relative'
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'clamp(0.5rem, 1vw, 1rem)'
+          gap: 'clamp(0.3rem, 1vw, 1rem)',
+          flexShrink: 0
         }}>
           <span style={{
             fontWeight: 700,
-            fontSize: 'clamp(1rem, 1.5vw, 1.3rem)',
-            color: '#1e293b'
+            fontSize: 'clamp(0.8rem, 1.5vw, 1.3rem)',
+            color: '#1e293b',
+            whiteSpace: 'nowrap'
           }}>
             ✝️ Sunday School
           </span>
         </div>
 
+        {/* Mobile Hamburger Menu */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            color: '#1e293b',
+            touchAction: 'manipulation'
+          }}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? '✕' : '☰'}
+        </button>
+
+        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'clamp(0.25rem, 0.8vw, 1rem)',
+          gap: 'clamp(0.2rem, 0.8vw, 1rem)',
           overflow: 'auto',
           flex: 1,
           justifyContent: 'center',
           padding: '0 0.5rem'
-        }}>
+        }}
+        className="desktop-nav">
           {navItems.map((item, index) => (
             <button
               key={index}
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavigation(item.path)}
               style={{
                 background: item.active ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
                 color: item.active ? 'white' : '#64748b',
                 border: 'none',
-                padding: 'clamp(0.3rem, 0.6vw, 0.6rem) clamp(0.6rem, 1.2vw, 1rem)',
+                padding: 'clamp(0.2rem, 0.6vw, 0.6rem) clamp(0.4rem, 1.2vw, 1rem)',
                 borderRadius: '8px',
                 cursor: 'pointer',
-                fontSize: 'clamp(0.7rem, 1vw, 0.9rem)',
+                fontSize: 'clamp(0.6rem, 1vw, 0.9rem)',
                 fontWeight: item.active ? 600 : 500,
                 transition: 'all 0.3s ease',
                 whiteSpace: 'nowrap',
@@ -270,22 +300,69 @@ export default function Classes() {
                 }
               }}
             >
-              <span style={{ fontSize: 'clamp(0.8rem, 1vw, 1rem)' }}>{item.icon}</span>
+              <span style={{ fontSize: 'clamp(0.7rem, 1vw, 1rem)' }}>{item.icon}</span>
               {item.label}
             </button>
           ))}
         </div>
 
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'white',
+            padding: '0.5rem',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            zIndex: 200
+          }}
+          className="mobile-nav">
+            {navItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => handleNavigation(item.path)}
+                style={{
+                  background: item.active ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                  color: item.active ? 'white' : '#64748b',
+                  border: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: item.active ? 600 : 500,
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontFamily: 'inherit',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem'
+          gap: '0.5rem',
+          flexShrink: 0
         }}>
           <div style={{
             background: 'rgba(79,70,229,0.08)',
             padding: '0.3rem 0.8rem',
             borderRadius: '6px',
-            fontSize: 'clamp(0.6rem, 0.8vw, 0.8rem)',
+            fontSize: 'clamp(0.5rem, 0.8vw, 0.8rem)',
             color: '#4f46e5',
             fontWeight: 600,
             whiteSpace: 'nowrap'
@@ -299,7 +376,7 @@ export default function Classes() {
       <div style={{
         flex: 1,
         overflow: 'auto',
-        padding: 'clamp(0.75rem, 1.5vw, 1.5rem)',
+        padding: 'clamp(0.5rem, 1.5vw, 1.5rem)',
         position: 'relative'
       }}>
         <div style={{
@@ -312,13 +389,15 @@ export default function Classes() {
           <div style={{
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             borderRadius: '16px',
-            padding: 'clamp(1.5rem, 2vw, 2rem)',
-            marginBottom: 'clamp(1rem, 1.5vw, 1.5rem)',
+            padding: 'clamp(1rem, 2vw, 2rem)',
+            marginBottom: 'clamp(0.75rem, 1.5vw, 1.5rem)',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             color: 'white',
-            boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+            boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)',
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
             <div style={{
               display: 'flex',
@@ -330,14 +409,14 @@ export default function Classes() {
                 padding: '12px',
                 borderRadius: '12px',
                 backdropFilter: 'blur(10px)',
-                fontSize: 'clamp(1.5rem, 3vw, 2rem)'
+                fontSize: 'clamp(1.2rem, 3vw, 2rem)'
               }}>
                 📚
               </div>
               <div>
                 <h1 style={{
                   margin: 0,
-                  fontSize: 'clamp(1.2rem, 2vw, 1.8rem)',
+                  fontSize: 'clamp(1rem, 2vw, 1.8rem)',
                   fontWeight: 700
                 }}>
                   Class Management
@@ -345,7 +424,7 @@ export default function Classes() {
                 <p style={{
                   margin: '4px 0 0 0',
                   opacity: 0.9,
-                  fontSize: 'clamp(0.7rem, 1vw, 0.9rem)'
+                  fontSize: 'clamp(0.6rem, 1vw, 0.9rem)'
                 }}>
                   Manage your classes and teachers efficiently
                 </p>
@@ -353,20 +432,21 @@ export default function Classes() {
             </div>
             <div style={{
               background: 'rgba(255, 255, 255, 0.2)',
-              padding: 'clamp(0.5rem, 1vw, 0.75rem) clamp(1rem, 1.5vw, 1.5rem)',
+              padding: 'clamp(0.4rem, 1vw, 0.75rem) clamp(0.75rem, 1.5vw, 1.5rem)',
               borderRadius: '12px',
               textAlign: 'center',
-              backdropFilter: 'blur(10px)'
+              backdropFilter: 'blur(10px)',
+              minWidth: '70px'
             }}>
               <span style={{
-                fontSize: 'clamp(1.2rem, 2vw, 1.8rem)',
+                fontSize: 'clamp(1rem, 2vw, 1.8rem)',
                 fontWeight: 700,
                 display: 'block'
               }}>
                 {classes.length}
               </span>
               <span style={{
-                fontSize: 'clamp(0.5rem, 0.8vw, 0.7rem)',
+                fontSize: 'clamp(0.4rem, 0.8vw, 0.7rem)',
                 opacity: 0.9
               }}>
                 Total Classes
@@ -378,7 +458,7 @@ export default function Classes() {
           <div style={{
             background: 'white',
             borderRadius: '12px',
-            padding: 'clamp(1rem, 1.5vw, 1.5rem)',
+            padding: 'clamp(0.75rem, 1.5vw, 1.5rem)',
             marginBottom: '1.5rem',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
             transition: 'box-shadow 0.3s ease'
@@ -396,7 +476,7 @@ export default function Classes() {
                 alignItems: 'center',
                 gap: '8px',
                 margin: 0,
-                fontSize: 'clamp(1rem, 1.5vw, 1.2rem)',
+                fontSize: 'clamp(0.9rem, 1.5vw, 1.2rem)',
                 color: '#1e293b'
               }}>
                 ➕ Add New Class
@@ -426,7 +506,8 @@ export default function Classes() {
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
               marginBottom: '1.25rem'
-            }}>
+            }}
+            className="form-grid">
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -452,7 +533,9 @@ export default function Classes() {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#667eea'
@@ -491,7 +574,9 @@ export default function Classes() {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#667eea'
@@ -546,7 +631,7 @@ export default function Classes() {
           <div style={{
             background: 'white',
             borderRadius: '12px',
-            padding: 'clamp(1rem, 1.5vw, 1.5rem)',
+            padding: 'clamp(0.75rem, 1.5vw, 1.5rem)',
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
             transition: 'box-shadow 0.3s ease'
           }}>
@@ -556,14 +641,16 @@ export default function Classes() {
               alignItems: 'center',
               marginBottom: '1.25rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #f1f5f9'
+              borderBottom: '2px solid #f1f5f9',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
             }}>
               <h2 style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
                 margin: 0,
-                fontSize: 'clamp(1rem, 1.5vw, 1.2rem)',
+                fontSize: 'clamp(0.9rem, 1.5vw, 1.2rem)',
                 color: '#1e293b'
               }}>
                 All Classes
@@ -596,13 +683,14 @@ export default function Classes() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
                   width: '100%',
-                  borderCollapse: 'collapse'
+                  borderCollapse: 'collapse',
+                  minWidth: '500px'
                 }}>
                   <thead>
                     <tr>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 1rem',
+                        padding: '0.75rem 0.75rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
@@ -613,7 +701,7 @@ export default function Classes() {
                       }}>#</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 1rem',
+                        padding: '0.75rem 0.75rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
@@ -624,7 +712,7 @@ export default function Classes() {
                       }}>Class Name</th>
                       <th style={{
                         textAlign: 'left',
-                        padding: '0.75rem 1rem',
+                        padding: '0.75rem 0.75rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
@@ -635,7 +723,7 @@ export default function Classes() {
                       }}>Teacher</th>
                       <th style={{
                         textAlign: 'center',
-                        padding: '0.75rem 1rem',
+                        padding: '0.75rem 0.75rem',
                         background: '#f8fafc',
                         color: '#475569',
                         fontWeight: 600,
@@ -655,14 +743,14 @@ export default function Classes() {
                       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
                         <td style={{
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
                           fontWeight: 600,
                           color: '#94a3b8'
                         }}>{i + 1}</td>
                         <td style={{
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
                           fontWeight: 500
@@ -673,13 +761,14 @@ export default function Classes() {
                             padding: '0.25rem 0.75rem',
                             borderRadius: '20px',
                             fontSize: '0.8rem',
-                            fontWeight: 500
+                            fontWeight: 500,
+                            display: 'inline-block'
                           }}>
                             {c.class_name}
                           </span>
                         </td>
                         <td style={{
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
                           color: '#64748b'
@@ -687,7 +776,7 @@ export default function Classes() {
                           👤 {c.teacher_name || 'Not assigned'}
                         </td>
                         <td style={{
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           borderBottom: '1px solid #f1f5f9',
                           verticalAlign: 'middle',
                           textAlign: 'center'
@@ -705,7 +794,8 @@ export default function Classes() {
                               transition: 'all 0.2s ease',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '4px'
+                              gap: '4px',
+                              touchAction: 'manipulation'
                             }}
                             onClick={() => openConfirmDialog(c.id, c.class_name)}
                             onMouseEnter={e => {
@@ -760,7 +850,7 @@ export default function Classes() {
               transform: 'translate(-50%, -50%)',
               background: 'white',
               borderRadius: '24px',
-              padding: '32px',
+              padding: 'clamp(24px, 4vw, 32px)',
               maxWidth: '420px',
               width: '90%',
               zIndex: 10000,
@@ -787,7 +877,7 @@ export default function Classes() {
             {/* Title */}
             <h3 style={{
               textAlign: 'center',
-              fontSize: '20px',
+              fontSize: 'clamp(18px, 2.5vw, 20px)',
               fontWeight: 700,
               color: '#2D3436',
               margin: '0 0 8px'
@@ -798,7 +888,7 @@ export default function Classes() {
             {/* Message */}
             <p style={{
               textAlign: 'center',
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 1.5vw, 14px)',
               color: '#636E72',
               margin: '0 0 24px',
               lineHeight: 1.5
@@ -810,8 +900,10 @@ export default function Classes() {
             {/* Buttons */}
             <div style={{
               display: 'flex',
-              gap: '10px'
-            }}>
+              gap: '10px',
+              flexWrap: 'wrap'
+            }}
+            className="confirm-buttons">
               <button
                 onClick={cancelDelete}
                 style={{
@@ -825,7 +917,8 @@ export default function Classes() {
                   color: '#636E72',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  touchAction: 'manipulation'
+                  touchAction: 'manipulation',
+                  minWidth: '80px'
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = '#E8E8E8'
@@ -850,7 +943,8 @@ export default function Classes() {
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 15px rgba(255, 107, 107, 0.4)',
-                  touchAction: 'manipulation'
+                  touchAction: 'manipulation',
+                  minWidth: '80px'
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
@@ -908,14 +1002,44 @@ export default function Classes() {
             transform: translate(-50%, -50%) scale(1);
           }
         }
+        
+        /* Mobile Styles */
         @media (max-width: 768px) {
-          nav {
-            overflow-x: auto;
+          .desktop-nav {
+            display: none !important;
           }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: flex !important;
+          }
+          
           .form-grid {
             grid-template-columns: 1fr !important;
           }
+          
+          .mobile-nav {
+            display: flex !important;
+          }
+          
+          .confirm-buttons {
+            flex-direction: column !important;
+          }
+          
+          .confirm-buttons button {
+            width: 100% !important;
+          }
         }
+        
+        @media (min-width: 769px) {
+          .mobile-nav {
+            display: none !important;
+          }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: none !important;
+          }
+        }
+        
         @media (max-width: 480px) {
           .page-header {
             flex-direction: column !important;
@@ -928,7 +1052,11 @@ export default function Classes() {
           .confirm-buttons {
             flex-direction: column !important;
           }
+          .confirm-buttons button {
+            width: 100% !important;
+          }
         }
+        
         ::-webkit-scrollbar {
           width: 6px;
           height: 6px;
@@ -951,6 +1079,14 @@ export default function Classes() {
         }
         input {
           font-size: 16px !important;
+        }
+        
+        /* Fix for iOS Safari */
+        @supports (-webkit-touch-callout: none) {
+          .mobile-nav {
+            position: absolute !important;
+            top: 100% !important;
+          }
         }
       `}</style>
     </div>
