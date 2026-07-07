@@ -11,7 +11,7 @@ export default function Students() {
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   // Confirmation Dialog States
   const [showConfirm, setShowConfirm] = useState(false)
@@ -96,14 +96,48 @@ const submit = async () => {
     }
   }
   const edit = (s) => {
+    // Format date for input field (YYYY-MM-DD)
+    let formattedDob = ''
+    if (s.dob) {
+      // If dob has time part, extract only the date
+      const datePart = s.dob.split('T')[0]
+      formattedDob = datePart
+    }
     setForm({ 
       name: s.name, 
       class_id: s.class_id, 
-      dob: s.dob || '', 
+      dob: formattedDob, 
       phone: s.phone || '' 
     })
     setEditId(s.id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Format date for display - FIXES THE T00:00:00.000Z ISSUE
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—'
+    try {
+      // If it's already in YYYY-MM-DD format
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateStr
+      }
+      // If it has time part, extract only date
+      const datePart = dateStr.split('T')[0]
+      if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return datePart
+      }
+      // Try to create date object
+      const date = new Date(dateStr)
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+      return dateStr
+    } catch {
+      return dateStr
+    }
   }
 
   // Open confirmation dialog
@@ -548,7 +582,8 @@ const submit = async () => {
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
               marginBottom: '1rem'
-            }}>
+            }}
+            className="form-grid">
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -574,7 +609,9 @@ const submit = async () => {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#059669'
@@ -613,7 +650,9 @@ const submit = async () => {
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
                     background: '#f8fafc',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#059669'
@@ -639,7 +678,8 @@ const submit = async () => {
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem',
               marginBottom: '1.25rem'
-            }}>
+            }}
+            className="form-grid">
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -665,7 +705,9 @@ const submit = async () => {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#059669'
@@ -704,7 +746,9 @@ const submit = async () => {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#059669'
@@ -736,7 +780,8 @@ const submit = async () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                opacity: isSubmitting ? 0.7 : 1
+                opacity: isSubmitting ? 0.7 : 1,
+                touchAction: 'manipulation'
               }}
               onClick={submit}
               disabled={isSubmitting}
@@ -769,7 +814,9 @@ const submit = async () => {
               alignItems: 'center',
               marginBottom: '1.25rem',
               paddingBottom: '0.75rem',
-              borderBottom: '2px solid #f1f5f9'
+              borderBottom: '2px solid #f1f5f9',
+              flexWrap: 'wrap',
+              gap: '0.5rem'
             }}>
               <h2 style={{
                 display: 'flex',
@@ -809,7 +856,8 @@ const submit = async () => {
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
                   width: '100%',
-                  borderCollapse: 'collapse'
+                  borderCollapse: 'collapse',
+                  minWidth: '600px'
                 }}>
                   <thead>
                     <tr>
@@ -916,7 +964,8 @@ const submit = async () => {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: '0.8rem'
+                              fontSize: '0.8rem',
+                              flexShrink: 0
                             }}>
                               {s.name.charAt(0).toUpperCase()}
                             </span>
@@ -934,7 +983,8 @@ const submit = async () => {
                             padding: '0.25rem 0.75rem',
                             borderRadius: '20px',
                             fontSize: '0.75rem',
-                            fontWeight: 500
+                            fontWeight: 500,
+                            display: 'inline-block'
                           }}>
                             {s.class_name}
                           </span>
@@ -945,7 +995,7 @@ const submit = async () => {
                           verticalAlign: 'middle',
                           color: '#64748b'
                         }}>
-                          {s.dob || '—'}
+                          {formatDate(s.dob)}
                         </td>
                         <td style={{
                           padding: '0.75rem 1rem',
@@ -972,7 +1022,8 @@ const submit = async () => {
                               fontWeight: 600,
                               cursor: 'pointer',
                               transition: 'all 0.2s ease',
-                              marginRight: '0.5rem'
+                              marginRight: '0.5rem',
+                              touchAction: 'manipulation'
                             }}
                             onClick={() => edit(s)}
                             onMouseEnter={e => {
@@ -996,7 +1047,8 @@ const submit = async () => {
                               fontSize: '0.75rem',
                               fontWeight: 600,
                               cursor: 'pointer',
-                              transition: 'all 0.2s ease'
+                              transition: 'all 0.2s ease',
+                              touchAction: 'manipulation'
                             }}
                             onClick={() => openConfirmDialog(s.id, s.name)}
                             onMouseEnter={e => {
@@ -1051,7 +1103,7 @@ const submit = async () => {
               transform: 'translate(-50%, -50%)',
               background: 'white',
               borderRadius: '24px',
-              padding: '32px',
+              padding: 'clamp(24px, 4vw, 32px)',
               maxWidth: '420px',
               width: '90%',
               zIndex: 10000,
@@ -1078,7 +1130,7 @@ const submit = async () => {
             {/* Title */}
             <h3 style={{
               textAlign: 'center',
-              fontSize: '20px',
+              fontSize: 'clamp(18px, 2.5vw, 20px)',
               fontWeight: 700,
               color: '#2D3436',
               margin: '0 0 8px'
@@ -1089,7 +1141,7 @@ const submit = async () => {
             {/* Message */}
             <p style={{
               textAlign: 'center',
-              fontSize: '14px',
+              fontSize: 'clamp(13px, 1.5vw, 14px)',
               color: '#636E72',
               margin: '0 0 24px',
               lineHeight: 1.5
@@ -1101,8 +1153,10 @@ const submit = async () => {
             {/* Buttons */}
             <div style={{
               display: 'flex',
-              gap: '10px'
-            }}>
+              gap: '10px',
+              flexWrap: 'wrap'
+            }}
+            className="confirm-buttons">
               <button
                 onClick={cancelDelete}
                 style={{
@@ -1116,7 +1170,8 @@ const submit = async () => {
                   color: '#636E72',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  touchAction: 'manipulation'
+                  touchAction: 'manipulation',
+                  minWidth: '80px'
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = '#E8E8E8'
@@ -1141,7 +1196,8 @@ const submit = async () => {
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   boxShadow: '0 4px 15px rgba(255, 107, 107, 0.4)',
-                  touchAction: 'manipulation'
+                  touchAction: 'manipulation',
+                  minWidth: '80px'
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = 'translateY(-2px)'
@@ -1217,6 +1273,14 @@ const submit = async () => {
           .form-grid {
             grid-template-columns: 1fr !important;
           }
+          
+          .confirm-buttons {
+            flex-direction: column !important;
+          }
+          
+          .confirm-buttons button {
+            width: 100% !important;
+          }
         }
         
         @media (min-width: 769px) {
@@ -1241,6 +1305,9 @@ const submit = async () => {
           .confirm-buttons {
             flex-direction: column !important;
           }
+          .confirm-buttons button {
+            width: 100% !important;
+          }
         }
         ::-webkit-scrollbar {
           width: 6px;
@@ -1251,7 +1318,7 @@ const submit = async () => {
         }
         ::-webkit-scrollbar-thumb {
           background: linear-gradient(135deg, #059669, #34d399);
-          border-radius: 10px;
+          borderRadius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(135deg, #047857, #10b981);
@@ -1262,7 +1329,7 @@ const submit = async () => {
         button {
           touch-action: manipulation;
         }
-        input {
+        input, select {
           font-size: 16px !important;
         }
       `}</style>
