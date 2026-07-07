@@ -11,6 +11,7 @@ export default function Students() {
   const [loading, setLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
   
   // Confirmation Dialog States
   const [showConfirm, setShowConfirm] = useState(false)
@@ -64,7 +65,7 @@ export default function Students() {
     setTimeout(() => setMsg({ text: '', type: '' }), 3000)
   }
 
-  const submit = async () => {
+const submit = async () => {
     if (!form.name || !form.class_id) {
       showMessage('Please fill in all required fields', 'error')
       return
@@ -72,12 +73,18 @@ export default function Students() {
 
     setIsSubmitting(true)
     try {
+      const payload = {
+        name: form.name,
+        class_id: form.class_id,
+        dob: form.dob || null,
+        phone: form.phone || null
+      }
       if (editId) {
-        await api.put(`/students.php?id=${editId}`, form)
+        await api.put(`/students.php?id=${editId}`, payload)
         showMessage('Student updated successfully! ✏️', 'success')
         setEditId(null)
       } else {
-        await api.post('/students.php', form)
+        await api.post('/students.php', payload)
         showMessage('Student added successfully! 🎉', 'success')
       }
       setForm({ name: '', class_id: '', dob: '', phone: '' })
@@ -88,7 +95,6 @@ export default function Students() {
       setIsSubmitting(false)
     }
   }
-
   const edit = (s) => {
     setForm({ 
       name: s.name, 
@@ -223,7 +229,7 @@ export default function Students() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - WITH MOBILE MENU */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -235,7 +241,8 @@ export default function Students() {
         justifyContent: 'space-between',
         flexShrink: 0,
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        zIndex: 100
+        zIndex: 100,
+        position: 'relative'
       }}>
         <div style={{
           display: 'flex',
@@ -251,6 +258,25 @@ export default function Students() {
           </span>
         </div>
 
+        {/* Hamburger Menu Button - FOR MOBILE */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            color: '#1e293b',
+            touchAction: 'manipulation'
+          }}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? '✕' : '☰'}
+        </button>
+
+        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -259,7 +285,8 @@ export default function Students() {
           flex: 1,
           justifyContent: 'center',
           padding: '0 0.5rem'
-        }}>
+        }}
+        className="desktop-nav">
           {navItems.map((item, index) => (
             <button
               key={index}
@@ -298,6 +325,55 @@ export default function Students() {
             </button>
           ))}
         </div>
+
+        {/* Mobile Navigation Menu - DROPDOWN */}
+        {isMobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'white',
+            padding: '0.5rem',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            zIndex: 200
+          }}
+          className="mobile-nav">
+            {navItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  navigate(item.path)
+                  setIsMobileMenuOpen(false)
+                }}
+                style={{
+                  background: item.active ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                  color: item.active ? 'white' : '#64748b',
+                  border: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: item.active ? 600 : 500,
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontFamily: 'inherit',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{
           display: 'flex',
@@ -1123,14 +1199,36 @@ export default function Students() {
             transform: translate(-50%, -50%) scale(1);
           }
         }
+        
+        /* Mobile Styles */
         @media (max-width: 768px) {
-          nav {
-            overflow-x: auto;
+          .desktop-nav {
+            display: none !important;
           }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: flex !important;
+          }
+          
+          .mobile-nav {
+            display: flex !important;
+          }
+          
           .form-grid {
             grid-template-columns: 1fr !important;
           }
         }
+        
+        @media (min-width: 769px) {
+          .mobile-nav {
+            display: none !important;
+          }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: none !important;
+          }
+        }
+        
         @media (max-width: 480px) {
           .page-header {
             flex-direction: column !important;
