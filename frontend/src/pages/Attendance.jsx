@@ -12,6 +12,7 @@ export default function Attendance() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
   const navigate = useNavigate()
 
   // Get current time
@@ -126,7 +127,7 @@ export default function Attendance() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - WITH MOBILE MENU */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -138,7 +139,8 @@ export default function Attendance() {
         justifyContent: 'space-between',
         flexShrink: 0,
         boxShadow: '0 2px 20px rgba(0,0,0,0.05)',
-        zIndex: 100
+        zIndex: 100,
+        position: 'relative'
       }}>
         <div style={{
           display: 'flex',
@@ -154,6 +156,25 @@ export default function Attendance() {
           </span>
         </div>
 
+        {/* Hamburger Menu Button - FOR MOBILE */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          style={{
+            display: 'none',
+            background: 'transparent',
+            border: 'none',
+            fontSize: '1.5rem',
+            cursor: 'pointer',
+            padding: '0.5rem',
+            color: '#1e293b',
+            touchAction: 'manipulation'
+          }}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? '✕' : '☰'}
+        </button>
+
+        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -162,7 +183,8 @@ export default function Attendance() {
           flex: 1,
           justifyContent: 'center',
           padding: '0 0.5rem'
-        }}>
+        }}
+        className="desktop-nav">
           {navItems.map((item, index) => (
             <button
               key={index}
@@ -201,6 +223,55 @@ export default function Attendance() {
             </button>
           ))}
         </div>
+
+        {/* Mobile Navigation Menu - DROPDOWN */}
+        {isMobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: 'white',
+            padding: '0.5rem',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+            borderBottom: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.25rem',
+            zIndex: 200
+          }}
+          className="mobile-nav">
+            {navItems.map((item, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  navigate(item.path)
+                  setIsMobileMenuOpen(false)
+                }}
+                style={{
+                  background: item.active ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' : 'transparent',
+                  color: item.active ? 'white' : '#64748b',
+                  border: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: item.active ? 600 : 500,
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontFamily: 'inherit',
+                  width: '100%',
+                  textAlign: 'left'
+                }}
+              >
+                <span>{item.icon}</span>
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div style={{
           display: 'flex',
@@ -333,7 +404,8 @@ export default function Attendance() {
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
               gap: '1rem'
-            }}>
+            }}
+            className="filter-grid">
               <div style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -359,7 +431,9 @@ export default function Attendance() {
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
-                    background: '#f8fafc'
+                    background: '#f8fafc',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#4f46e5'
@@ -398,7 +472,9 @@ export default function Attendance() {
                     fontSize: '0.875rem',
                     transition: 'all 0.3s ease',
                     background: '#f8fafc',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    width: '100%',
+                    boxSizing: 'border-box'
                   }}
                   onFocus={e => {
                     e.target.style.borderColor = '#4f46e5'
@@ -452,12 +528,14 @@ export default function Attendance() {
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px'
+                  gap: '12px',
+                  flexWrap: 'wrap'
                 }}>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    flexWrap: 'wrap'
                   }}>
                     <span style={{
                       display: 'flex',
@@ -494,7 +572,8 @@ export default function Attendance() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '6px',
-                      opacity: saving ? 0.7 : 1
+                      opacity: saving ? 0.7 : 1,
+                      touchAction: 'manipulation'
                     }}
                     onClick={save}
                     disabled={saving}
@@ -535,13 +614,14 @@ export default function Attendance() {
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{
                     width: '100%',
-                    borderCollapse: 'collapse'
+                    borderCollapse: 'collapse',
+                    minWidth: '500px'
                   }}>
                     <thead>
                       <tr>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -552,7 +632,7 @@ export default function Attendance() {
                         }}>#</th>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -563,7 +643,7 @@ export default function Attendance() {
                         }}>Student Name</th>
                         <th style={{
                           textAlign: 'center',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -574,7 +654,7 @@ export default function Attendance() {
                         }}>Status</th>
                         <th style={{
                           textAlign: 'left',
-                          padding: '0.75rem 1rem',
+                          padding: '0.75rem 0.75rem',
                           background: '#f8fafc',
                           color: '#475569',
                           fontWeight: 600,
@@ -598,14 +678,14 @@ export default function Attendance() {
                           onMouseLeave={e => e.currentTarget.style.background = isPresent ? 'rgba(5, 150, 105, 0.03)' : 'transparent'}
                           >
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               fontWeight: 600,
                               color: '#94a3b8'
                             }}>{i + 1}</td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               fontWeight: 500
@@ -633,7 +713,7 @@ export default function Attendance() {
                               </span>
                             </td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle',
                               textAlign: 'center'
@@ -651,7 +731,8 @@ export default function Attendance() {
                                   background: isPresent ? 'linear-gradient(135deg, #059669, #34d399)' : 'linear-gradient(135deg, #dc2626, #f87171)',
                                   color: 'white',
                                   minWidth: '90px',
-                                  boxShadow: isPresent ? '0 4px 12px rgba(5, 150, 105, 0.3)' : '0 4px 12px rgba(220, 38, 38, 0.3)'
+                                  boxShadow: isPresent ? '0 4px 12px rgba(5, 150, 105, 0.3)' : '0 4px 12px rgba(220, 38, 38, 0.3)',
+                                  touchAction: 'manipulation'
                                 }}
                                 onMouseEnter={e => {
                                   e.currentTarget.style.transform = 'scale(1.05)'
@@ -666,7 +747,7 @@ export default function Attendance() {
                               </button>
                             </td>
                             <td style={{
-                              padding: '0.75rem 1rem',
+                              padding: '0.75rem 0.75rem',
                               borderBottom: '1px solid #f1f5f9',
                               verticalAlign: 'middle'
                             }}>
@@ -684,7 +765,8 @@ export default function Attendance() {
                                   borderRadius: '6px',
                                   fontSize: '0.8rem',
                                   transition: 'all 0.3s ease',
-                                  background: '#f8fafc'
+                                  background: '#f8fafc',
+                                  boxSizing: 'border-box'
                                 }}
                                 onFocus={e => {
                                   e.target.style.borderColor = '#4f46e5'
@@ -772,14 +854,36 @@ export default function Attendance() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
+        
+        /* Mobile Styles */
         @media (max-width: 768px) {
-          nav {
-            overflow-x: auto;
+          .desktop-nav {
+            display: none !important;
           }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: flex !important;
+          }
+          
+          .mobile-nav {
+            display: flex !important;
+          }
+          
           .filter-grid {
             grid-template-columns: 1fr !important;
           }
         }
+        
+        @media (min-width: 769px) {
+          .mobile-nav {
+            display: none !important;
+          }
+          
+          nav button[aria-label="Toggle menu"] {
+            display: none !important;
+          }
+        }
+        
         @media (max-width: 480px) {
           .page-header {
             flex-direction: column !important;
@@ -800,6 +904,15 @@ export default function Attendance() {
         }
         ::-webkit-scrollbar-thumb:hover {
           background: linear-gradient(135deg, #4338ca, #6366f1);
+        }
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        button {
+          touch-action: manipulation;
+        }
+        input, select {
+          font-size: 16px !important;
         }
       `}</style>
     </div>
