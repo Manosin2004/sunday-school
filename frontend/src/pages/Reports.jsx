@@ -9,7 +9,7 @@ export default function Reports() {
   const [records, setRecords] = useState([])
   const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false) // ADDED
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const navigate = useNavigate()
 
   // Get current time
@@ -66,6 +66,33 @@ export default function Reports() {
     a.click()
   }
 
+  // Format date for display - removes time part
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—'
+    try {
+      // If it's already in YYYY-MM-DD format
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateStr
+      }
+      // If it has time part, extract only date
+      const datePart = dateStr.split('T')[0]
+      if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return datePart
+      }
+      // Try to create date object
+      const date = new Date(dateStr)
+      if (!isNaN(date.getTime())) {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      }
+      return dateStr
+    } catch {
+      return dateStr
+    }
+  }
+
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const selectedClass = classes.find(c => c.id == classId)
   const presentCount = records.filter(r => r.status === 'present').length
@@ -86,7 +113,7 @@ export default function Reports() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar - WITH MOBILE MENU */}
+      {/* Top Navigation Bar */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -115,7 +142,6 @@ export default function Reports() {
           </span>
         </div>
 
-        {/* Hamburger Menu Button - FOR MOBILE */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           style={{
@@ -133,7 +159,6 @@ export default function Reports() {
           {isMobileMenuOpen ? '✕' : '☰'}
         </button>
 
-        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -183,7 +208,6 @@ export default function Reports() {
           ))}
         </div>
 
-        {/* Mobile Navigation Menu - DROPDOWN */}
         {isMobileMenuOpen && (
           <div style={{
             position: 'absolute',
@@ -264,7 +288,7 @@ export default function Reports() {
           position: 'relative',
           zIndex: 1
         }}>
-          {/* Page Header - Purple Theme */}
+          {/* Page Header */}
           <div style={{
             background: 'linear-gradient(135deg, #7c3aed 0%, #a78bfa 100%)',
             borderRadius: '16px',
@@ -274,7 +298,9 @@ export default function Reports() {
             justifyContent: 'space-between',
             alignItems: 'center',
             color: 'white',
-            boxShadow: '0 10px 40px rgba(124, 58, 237, 0.3)'
+            boxShadow: '0 10px 40px rgba(124, 58, 237, 0.3)',
+            flexWrap: 'wrap',
+            gap: '1rem'
           }}>
             <div style={{
               display: 'flex',
@@ -701,7 +727,10 @@ export default function Reports() {
                   <p style={{ marginTop: '0.75rem' }}>Loading report...</p>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ 
+                  overflowX: 'auto',
+                  WebkitOverflowScrolling: 'touch'
+                }}>
                   <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
@@ -805,7 +834,7 @@ export default function Reports() {
                               verticalAlign: 'middle',
                               color: '#64748b'
                             }}>
-                              {r.date}
+                              {formatDate(r.date)}
                             </td>
                             <td style={{
                               padding: '0.75rem 0.75rem',
@@ -873,7 +902,6 @@ export default function Reports() {
           to { transform: rotate(360deg); }
         }
         
-        /* Mobile Styles */
         @media (max-width: 768px) {
           .desktop-nav {
             display: none !important;
