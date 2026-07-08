@@ -10,16 +10,6 @@ export default function Reports() {
   const [loading, setLoading] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  
-  // Edit state
-  const [editingRecord, setEditingRecord] = useState(null)
-  const [editStatus, setEditStatus] = useState('')
-  const [showEditModal, setShowEditModal] = useState(false)
-  
-  // Delete state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  
   const navigate = useNavigate()
 
   // Get current time
@@ -76,17 +66,20 @@ export default function Reports() {
     a.click()
   }
 
-  // Format date for display
+  // Format date for display - removes time part
   const formatDate = (dateStr) => {
     if (!dateStr) return '—'
     try {
+      // If it's already in YYYY-MM-DD format
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr
       }
+      // If it has time part, extract only date
       const datePart = dateStr.split('T')[0]
       if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return datePart
       }
+      // Try to create date object
       const date = new Date(dateStr)
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear()
@@ -97,49 +90,6 @@ export default function Reports() {
       return dateStr
     } catch {
       return dateStr
-    }
-  }
-
-  // Edit record
-  const handleEdit = (record) => {
-    setEditingRecord(record)
-    setEditStatus(record.status)
-    setShowEditModal(true)
-  }
-
-  const saveEdit = async () => {
-    if (!editingRecord) return
-    
-    try {
-      await api.put(`/attendance.php?id=${editingRecord.id}`, {
-        status: editStatus
-      })
-      alert('Attendance record updated successfully! ✅')
-      setShowEditModal(false)
-      setEditingRecord(null)
-      await load() // Refresh the report
-    } catch (error) {
-      alert('Failed to update attendance record')
-    }
-  }
-
-  // Delete record
-  const handleDelete = (record) => {
-    setDeleteTarget(record)
-    setShowDeleteConfirm(true)
-  }
-
-  const confirmDelete = async () => {
-    if (!deleteTarget) return
-    
-    try {
-      await api.delete(`/attendance.php?id=${deleteTarget.id}`)
-      alert('Attendance record deleted successfully! 🗑️')
-      setShowDeleteConfirm(false)
-      setDeleteTarget(null)
-      await load() // Refresh the report
-    } catch (error) {
-      alert('Failed to delete attendance record')
     }
   }
 
@@ -379,7 +329,7 @@ export default function Reports() {
                   opacity: 0.9,
                   fontSize: 'clamp(0.7rem, 1vw, 0.9rem)'
                 }}>
-                  View, edit and delete attendance records
+                  View and export attendance analytics
                 </p>
               </div>
             </div>
@@ -784,7 +734,7 @@ export default function Reports() {
                   <table style={{
                     width: '100%',
                     borderCollapse: 'collapse',
-                    minWidth: '500px'
+                    minWidth: '400px'
                   }}>
                     <thead>
                       <tr>
@@ -832,17 +782,6 @@ export default function Reports() {
                           letterSpacing: '0.5px',
                           borderBottom: '2px solid #e2e8f0'
                         }}>Status</th>
-                        <th style={{
-                          textAlign: 'center',
-                          padding: '0.75rem 0.75rem',
-                          background: '#f8fafc',
-                          color: '#475569',
-                          fontWeight: 600,
-                          fontSize: '0.75rem',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          borderBottom: '2px solid #e2e8f0'
-                        }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -915,64 +854,6 @@ export default function Reports() {
                                 {isPresent ? '✅ Present' : '❌ Absent'}
                               </span>
                             </td>
-                            <td style={{
-                              padding: '0.75rem 0.75rem',
-                              borderBottom: '1px solid #f1f5f9',
-                              verticalAlign: 'middle',
-                              textAlign: 'center'
-                            }}>
-                              <button 
-                                style={{
-                                  background: '#dbeafe',
-                                  color: '#1e40af',
-                                  padding: '0.25rem 0.875rem',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  marginRight: '0.5rem',
-                                  touchAction: 'manipulation'
-                                }}
-                                onClick={() => handleEdit(r)}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background = '#bfdbfe'
-                                  e.currentTarget.style.transform = 'scale(1.05)'
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background = '#dbeafe'
-                                  e.currentTarget.style.transform = 'scale(1)'
-                                }}
-                              >
-                                ✏️ Edit
-                              </button>
-                              <button 
-                                style={{
-                                  background: '#fee2e2',
-                                  color: '#dc2626',
-                                  padding: '0.25rem 0.875rem',
-                                  border: 'none',
-                                  borderRadius: '6px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 600,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s ease',
-                                  touchAction: 'manipulation'
-                                }}
-                                onClick={() => handleDelete(r)}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background = '#fecaca'
-                                  e.currentTarget.style.transform = 'scale(1.05)'
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background = '#fee2e2'
-                                  e.currentTarget.style.transform = 'scale(1)'
-                                }}
-                              >
-                                🗑️ Delete
-                              </button>
-                            </td>
                           </tr>
                         )
                       })}
@@ -1004,304 +885,6 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {showEditModal && editingRecord && (
-        <>
-          <div
-            onClick={() => setShowEditModal(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.5)',
-              backdropFilter: 'blur(8px)',
-              zIndex: 9999,
-              animation: 'fadeIn 0.3s ease'
-            }}
-          />
-
-          <div
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'white',
-              borderRadius: '24px',
-              padding: 'clamp(24px, 4vw, 32px)',
-              maxWidth: '420px',
-              width: '90%',
-              zIndex: 10000,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              animation: 'scaleIn 0.3s ease'
-            }}
-          >
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: '#dbeafe',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '32px',
-              margin: '0 auto 16px',
-              border: '2px solid #3b82f640'
-            }}>
-              ✏️
-            </div>
-
-            <h3 style={{
-              textAlign: 'center',
-              fontSize: 'clamp(18px, 2.5vw, 20px)',
-              fontWeight: 700,
-              color: '#2D3436',
-              margin: '0 0 8px'
-            }}>
-              Edit Attendance
-            </h3>
-
-            <p style={{
-              textAlign: 'center',
-              fontSize: 'clamp(13px, 1.5vw, 14px)',
-              color: '#636E72',
-              margin: '0 0 20px'
-            }}>
-              Update status for <strong>{editingRecord.name}</strong>
-            </p>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              marginBottom: '24px'
-            }}>
-              <label style={{
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                color: '#475569'
-              }}>
-                Status
-              </label>
-              <select
-                value={editStatus}
-                onChange={e => setEditStatus(e.target.value)}
-                style={{
-                  padding: '0.625rem 0.875rem',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  transition: 'all 0.3s ease',
-                  background: '#f8fafc',
-                  cursor: 'pointer',
-                  width: '100%',
-                  boxSizing: 'border-box'
-                }}
-              >
-                <option value="present">✅ Present</option>
-                <option value="absent">❌ Absent</option>
-              </select>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                onClick={() => setShowEditModal(false)}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: '#F1F2F6',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#636E72',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  touchAction: 'manipulation',
-                  minWidth: '80px'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#E8E8E8'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = '#F1F2F6'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveEdit}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: 'linear-gradient(135deg, #7c3aed, #a78bfa)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
-                  touchAction: 'manipulation',
-                  minWidth: '80px'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(124, 58, 237, 0.6)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(124, 58, 237, 0.4)'
-                }}
-              >
-                💾 Save
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      {showDeleteConfirm && deleteTarget && (
-        <>
-          <div
-            onClick={() => setShowDeleteConfirm(false)}
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.5)',
-              backdropFilter: 'blur(8px)',
-              zIndex: 9999,
-              animation: 'fadeIn 0.3s ease'
-            }}
-          />
-
-          <div
-            style={{
-              position: 'fixed',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              background: 'white',
-              borderRadius: '24px',
-              padding: 'clamp(24px, 4vw, 32px)',
-              maxWidth: '420px',
-              width: '90%',
-              zIndex: 10000,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              animation: 'scaleIn 0.3s ease'
-            }}
-          >
-            <div style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '50%',
-              background: '#FFE8E8',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '32px',
-              margin: '0 auto 16px',
-              border: '2px solid #FF6B6B40'
-            }}>
-              🗑️
-            </div>
-
-            <h3 style={{
-              textAlign: 'center',
-              fontSize: 'clamp(18px, 2.5vw, 20px)',
-              fontWeight: 700,
-              color: '#2D3436',
-              margin: '0 0 8px'
-            }}>
-              Delete Record
-            </h3>
-
-            <p style={{
-              textAlign: 'center',
-              fontSize: 'clamp(13px, 1.5vw, 14px)',
-              color: '#636E72',
-              margin: '0 0 24px',
-              lineHeight: 1.5
-            }}>
-              Are you sure you want to delete attendance record for<br/>
-              <strong>"{deleteTarget.name}"</strong> on <strong>{formatDate(deleteTarget.date)}</strong>?<br/>
-              This action cannot be undone.
-            </p>
-
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              flexWrap: 'wrap'
-            }}>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: '#F1F2F6',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: '#636E72',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  touchAction: 'manipulation',
-                  minWidth: '80px'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = '#E8E8E8'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = '#F1F2F6'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                style={{
-                  flex: 1,
-                  padding: '12px',
-                  background: 'linear-gradient(135deg, #FF6B6B, #EE5A24)',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  color: 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 15px rgba(255, 107, 107, 0.4)',
-                  touchAction: 'manipulation',
-                  minWidth: '80px'
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(255, 107, 107, 0.6)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.4)'
-                }}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-
       <style>{`
         * {
           margin: 0;
@@ -1317,20 +900,6 @@ export default function Reports() {
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes scaleIn {
-          from {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.9);
-          }
-          to {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-          }
         }
         
         @media (max-width: 768px) {
@@ -1400,4 +969,4 @@ export default function Reports() {
       `}</style>
     </div>
   )
-}
+} report page layum edit and delete option i want .
