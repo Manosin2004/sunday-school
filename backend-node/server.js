@@ -31,11 +31,84 @@ app.get('/api/run-setup-xyz123', async (req, res) => {
     `;
     const statements = sql.split(';').filter(s => s.trim());
     for (const stmt of statements) await conn.query(stmt);
-    await conn.query(`INSERT INTO classes (class_name, teacher_name) VALUES ('Nursery','Sister Mary'),('Primary','Brother John'),('Junior','Sister Grace'),('Senior','Brother Paul')`);
-    await conn.query(`INSERT INTO students (name, class_id, dob, phone) VALUES ('Aarav Kumar',1,'2019-03-10','9876543210'),('Priya Raj',2,'2016-07-22','9876543211'),('David Samuel',3,'2013-01-15','9876543212'),('Ruth Thomas',4,'2010-11-05','9876543213'),('Joel Peter',2,'2015-05-30','9876543214')`);
-    await conn.query(`INSERT INTO users (name, username, password, role) VALUES ('Admin','admin',MD5('admin123'),'admin'),('Teacher','teacher',MD5('teacher123'),'teacher')`);
+
+    const [[{ c: classCount }]] = await conn.query('SELECT COUNT(*) c FROM classes');
+    if (classCount === 0) {
+      await conn.query(`INSERT INTO classes (class_name, teacher_name) VALUES ('Nursery','Sister Mary'),('Primary','Brother John'),('Junior','Sister Grace'),('Senior','Brother Paul')`);
+    }
+
+    const [[{ c: studentCount }]] = await conn.query('SELECT COUNT(*) c FROM students');
+    if (studentCount === 0) {
+      const [classRows] = await conn.query('SELECT id FROM classes ORDER BY id LIMIT 4');
+      const ids = classRows.map(r => r.id);
+      if (ids.length >= 4) {
+        await conn.query(
+          `INSERT INTO students (name, class_id, dob, phone) VALUES
+           ('Aarav Kumar',?,'2019-03-10','9876543210'),
+           ('Priya Raj',?,'2016-07-22','9876543211'),
+           ('David Samuel',?,'2013-01-15','9876543212'),
+           ('Ruth Thomas',?,'2010-11-05','9876543213'),
+           ('Joel Peter',?,'2015-05-30','9876543214')`,
+          [ids[0], ids[1], ids[2], ids[3], ids[1]]
+        );
+      }
+    }
+
+    const [[{ c: userCount }]] = await conn.query('SELECT COUNT(*) c FROM users');
+    if (userCount === 0) {
+      await conn.query(`INSERT INTO users (name, username, password, role) VALUES ('Admin','admin',MD5('admin123'),'admin'),('Teacher','teacher',MD5('teacher123'),'teacher')`);
+    }
+
     conn.release();
-    res.send('Setup done!');
+    res.send('Setup done! classes:' + classCount + ' students:' + studentCount + ' users:' + userCount);
+  } catch (e) {
+    res.status(500).send('Error: ' + e.message);
+  }
+});
+
+// ---------- DB VIEWER (simple, no install needed) ----------
+app.get('/api/view-db-xyz123', async (req, res) => {
+  try {
+    const tables = ['classes', 'students', 'attendance', 'users'];
+    let html = '<html><body style="font-family:sans-serif">';
+    for (const t of tables) {
+      const [rows] = await pool.query(`SELECT * FROM ${t}`);
+      html += `<h2>${t}</h2><table border="1" cellpadding="6"><tr>`;
+      if (rows.length) {
+        html += Object.keys(rows[0]).map(k => `<th>${k}</th>`).join('');
+        html += '</tr>';
+        for (const r of rows) {
+          html += '<tr>' + Object.values(r).map(v => `<td>${v}</td>`).join('') + '</tr>';
+        }
+      }
+      html += '</table><br>';
+    }
+    html += '</body></html>';
+    res.send(html);
+  } catch (e) {
+    res.status(500).send('Error: ' + e.message);
+  }
+});
+
+// ---------- DB VIEWER ----------
+app.get('/api/view-db-xyz123', async (req, res) => {
+  try {
+    const tables = ['classes', 'students', 'attendance', 'users'];
+    let html = '<html><body style="font-family:sans-serif">';
+    for (const t of tables) {
+      const [rows] = await pool.query(`SELECT * FROM ${t}`);
+      html += `<h2>${t}</h2><table border="1" cellpadding="6"><tr>`;
+      if (rows.length) {
+        html += Object.keys(rows[0]).map(k => `<th>${k}</th>`).join('');
+        html += '</tr>';
+        for (const r of rows) {
+          html += '<tr>' + Object.values(r).map(v => `<td>${v}</td>`).join('') + '</tr>';
+        }
+      }
+      html += '</table><br>';
+    }
+    html += '</body></html>';
+    res.send(html);
   } catch (e) {
     res.status(500).send('Error: ' + e.message);
   }
@@ -150,6 +223,40 @@ app.get('/api/attendance.php', async (req, res) => {
   }
   res.json(rows);
 });
+app.put('/api/attendance.php', async (req, res) => {
+  const d = getBody(req);
+  if (req.query.id) {
+    await pool.execute(
+      `UPDATE attendance SET status=?, notes=? WHERE id=?`,
+      [d.status, d.notes || '', req.query.id]
+    );
+    return res.json({ message: 'Attendance updated' });
+  }
+  await pool.execute(
+    `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
+     ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
+    [d.student_id, d.date, d.status, d.notes || '']
+  );
+  res.json({ message: 'Attendance updated' });
+});
+
+app.put('/api/attendance.php', async (req, res) => {
+  const d = getBody(req);
+  if (req.query.id) {
+    await pool.execute(
+      `UPDATE attendance SET status=?, notes=? WHERE id=?`,
+      [d.status, d.notes || '', req.query.id]
+    );
+    return res.json({ message: 'Attendance updated' });
+  }
+  await pool.execute(
+    `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
+     ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
+    [d.student_id, d.date, d.status, d.notes || '']
+  );
+  res.json({ message: 'Attendance updated' });
+});
+
 app.post('/api/attendance.php', async (req, res) => {
   const records = getBody(req);
   const list = Array.isArray(records) ? records : [];
