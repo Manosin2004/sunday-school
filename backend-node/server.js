@@ -66,30 +66,6 @@ app.get('/api/run-setup-xyz123', async (req, res) => {
   }
 });
 
-// ---------- DB VIEWER (simple, no install needed) ----------
-app.get('/api/view-db-xyz123', async (req, res) => {
-  try {
-    const tables = ['classes', 'students', 'attendance', 'users'];
-    let html = '<html><body style="font-family:sans-serif">';
-    for (const t of tables) {
-      const [rows] = await pool.query(`SELECT * FROM ${t}`);
-      html += `<h2>${t}</h2><table border="1" cellpadding="6"><tr>`;
-      if (rows.length) {
-        html += Object.keys(rows[0]).map(k => `<th>${k}</th>`).join('');
-        html += '</tr>';
-        for (const r of rows) {
-          html += '<tr>' + Object.values(r).map(v => `<td>${v}</td>`).join('') + '</tr>';
-        }
-      }
-      html += '</table><br>';
-    }
-    html += '</body></html>';
-    res.send(html);
-  } catch (e) {
-    res.status(500).send('Error: ' + e.message);
-  }
-});
-
 // ---------- DB VIEWER ----------
 app.get('/api/view-db-xyz123', async (req, res) => {
   try {
@@ -116,11 +92,11 @@ app.get('/api/view-db-xyz123', async (req, res) => {
 
 // ---------- LOGIN ----------
 app.post('/api/login.php', async (req, res) => {
-  const d = getBody(req);
-  if (!d.username || !d.password) {
-    return res.status(400).json({ success: false, message: 'Username and password are required' });
-  }
   try {
+    const d = getBody(req);
+    if (!d.username || !d.password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required' });
+    }
     const [rows] = await pool.execute(
       'SELECT * FROM users WHERE username = ? AND password = ?',
       [d.username, md5(d.password)]
@@ -153,121 +129,153 @@ app.get('/api/dashboard.php', async (req, res) => {
 
 // ---------- CLASSES ----------
 app.get('/api/classes.php', async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM classes ORDER BY id DESC');
-  res.json(rows);
+  try {
+    const [rows] = await pool.query('SELECT * FROM classes ORDER BY id DESC');
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 app.post('/api/classes.php', async (req, res) => {
-  const d = getBody(req);
-  const [result] = await pool.execute(
-    'INSERT INTO classes (class_name, teacher_name) VALUES (?, ?)',
-    [d.class_name, d.teacher_name]
-  );
-  res.json({ id: result.insertId, message: 'Class created' });
+  try {
+    const d = getBody(req);
+    const [result] = await pool.execute(
+      'INSERT INTO classes (class_name, teacher_name) VALUES (?, ?)',
+      [d.class_name, d.teacher_name]
+    );
+    res.json({ id: result.insertId, message: 'Class created' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 app.delete('/api/classes.php', async (req, res) => {
-  await pool.execute('DELETE FROM classes WHERE id=?', [req.query.id]);
-  res.json({ message: 'Deleted' });
+  try {
+    await pool.execute('DELETE FROM classes WHERE id=?', [req.query.id]);
+    res.json({ message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 
 // ---------- STUDENTS ----------
 app.get('/api/students.php', async (req, res) => {
-  let rows;
-  if (req.query.class_id) {
-    [rows] = await pool.execute(
-      'SELECT s.*, c.class_name FROM students s JOIN classes c ON s.class_id=c.id WHERE s.class_id=? ORDER BY s.name',
-      [req.query.class_id]
-    );
-  } else {
-    [rows] = await pool.query(
-      'SELECT s.*, c.class_name FROM students s JOIN classes c ON s.class_id=c.id ORDER BY s.name'
-    );
+  try {
+    let rows;
+    if (req.query.class_id) {
+      [rows] = await pool.execute(
+        'SELECT s.*, c.class_name FROM students s JOIN classes c ON s.class_id=c.id WHERE s.class_id=? ORDER BY s.name',
+        [req.query.class_id]
+      );
+    } else {
+      [rows] = await pool.query(
+        'SELECT s.*, c.class_name FROM students s JOIN classes c ON s.class_id=c.id ORDER BY s.name'
+      );
+    }
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
-  res.json(rows);
 });
 app.post('/api/students.php', async (req, res) => {
-  const d = getBody(req);
-  const [result] = await pool.execute(
-    'INSERT INTO students (name, class_id, dob, phone) VALUES (?,?,?,?)',
-    [d.name, d.class_id, d.dob, d.phone]
-  );
-  res.json({ id: result.insertId, message: 'Student added' });
+  try {
+    const d = getBody(req);
+    const [result] = await pool.execute(
+      'INSERT INTO students (name, class_id, dob, phone) VALUES (?,?,?,?)',
+      [d.name, d.class_id, d.dob, d.phone]
+    );
+    res.json({ id: result.insertId, message: 'Student added' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 app.put('/api/students.php', async (req, res) => {
-  const d = getBody(req);
-  await pool.execute(
-    'UPDATE students SET name=?, class_id=?, dob=?, phone=? WHERE id=?',
-    [d.name, d.class_id, d.dob, d.phone, req.query.id]
-  );
-  res.json({ message: 'Updated' });
+  try {
+    const d = getBody(req);
+    await pool.execute(
+      'UPDATE students SET name=?, class_id=?, dob=?, phone=? WHERE id=?',
+      [d.name, d.class_id, d.dob, d.phone, req.query.id]
+    );
+    res.json({ message: 'Updated' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 app.delete('/api/students.php', async (req, res) => {
-  await pool.execute('DELETE FROM students WHERE id=?', [req.query.id]);
-  res.json({ message: 'Deleted' });
+  try {
+    await pool.execute('DELETE FROM students WHERE id=?', [req.query.id]);
+    res.json({ message: 'Deleted' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
 });
 
 // ---------- ATTENDANCE ----------
 app.get('/api/attendance.php', async (req, res) => {
-  let rows;
-  if (req.query.report) {
-    [rows] = await pool.execute(
-      `SELECT s.name, a.date, a.status FROM attendance a JOIN students s ON a.student_id=s.id
-       WHERE s.class_id=? AND MONTH(a.date)=? ORDER BY a.date, s.name`,
-      [req.query.class_id, req.query.month]
-    );
-  } else {
-    [rows] = await pool.execute(
-      `SELECT a.*, s.name FROM attendance a JOIN students s ON a.student_id=s.id
-       WHERE a.date=? AND s.class_id=?`,
-      [req.query.date, req.query.class_id]
-    );
+  try {
+    let rows;
+    if (req.query.report) {
+      [rows] = await pool.execute(
+        `SELECT s.name, a.date, a.status FROM attendance a JOIN students s ON a.student_id=s.id
+         WHERE s.class_id=? AND MONTH(a.date)=? ORDER BY a.date, s.name`,
+        [req.query.class_id, req.query.month]
+      );
+    } else {
+      [rows] = await pool.execute(
+        `SELECT a.*, s.name FROM attendance a JOIN students s ON a.student_id=s.id
+         WHERE a.date=? AND s.class_id=?`,
+        [req.query.date, req.query.class_id]
+      );
+    }
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
-  res.json(rows);
-});
-app.put('/api/attendance.php', async (req, res) => {
-  const d = getBody(req);
-  if (req.query.id) {
-    await pool.execute(
-      `UPDATE attendance SET status=?, notes=? WHERE id=?`,
-      [d.status, d.notes || '', req.query.id]
-    );
-    return res.json({ message: 'Attendance updated' });
-  }
-  await pool.execute(
-    `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
-     ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
-    [d.student_id, d.date, d.status, d.notes || '']
-  );
-  res.json({ message: 'Attendance updated' });
 });
 
 app.put('/api/attendance.php', async (req, res) => {
-  const d = getBody(req);
-  if (req.query.id) {
-    await pool.execute(
-      `UPDATE attendance SET status=?, notes=? WHERE id=?`,
-      [d.status, d.notes || '', req.query.id]
-    );
-    return res.json({ message: 'Attendance updated' });
-  }
-  await pool.execute(
-    `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
-     ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
-    [d.student_id, d.date, d.status, d.notes || '']
-  );
-  res.json({ message: 'Attendance updated' });
-});
-
-app.post('/api/attendance.php', async (req, res) => {
-  const records = getBody(req);
-  const list = Array.isArray(records) ? records : [];
-  for (const r of list) {
+  try {
+    const d = getBody(req);
+    if (req.query.id && req.query.id !== 'undefined') {
+      await pool.execute(
+        `UPDATE attendance SET status=?, notes=? WHERE id=?`,
+        [d.status, d.notes || '', req.query.id]
+      );
+      return res.json({ message: 'Attendance updated' });
+    }
+    if (!d.student_id || !d.date) {
+      return res.status(400).json({ message: 'student_id and date are required' });
+    }
     await pool.execute(
       `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
        ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
-      [r.student_id, r.date, r.status, r.notes || '']
+      [d.student_id, d.date, d.status, d.notes || '']
     );
+    res.json({ message: 'Attendance updated' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
-  res.json({ message: 'Attendance saved' });
+});
+
+app.post('/api/attendance.php', async (req, res) => {
+  try {
+    const records = getBody(req);
+    const list = Array.isArray(records) ? records : [];
+    for (const r of list) {
+      await pool.execute(
+        `INSERT INTO attendance (student_id, date, status, notes) VALUES (?,?,?,?)
+         ON DUPLICATE KEY UPDATE status=VALUES(status), notes=VALUES(notes)`,
+        [r.student_id, r.date, r.status, r.notes || '']
+      );
+    }
+    res.json({ message: 'Attendance saved' });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// Catch-all error handler so the server never crashes silently
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err);
 });
 
 const PORT = process.env.PORT || 3000;
