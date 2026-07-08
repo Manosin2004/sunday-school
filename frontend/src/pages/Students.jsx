@@ -12,6 +12,7 @@ export default function Students() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [selectedClassFilter, setSelectedClassFilter] = useState('all') // 'all', or specific class_id
   
   // Confirmation Dialog States
   const [showConfirm, setShowConfirm] = useState(false)
@@ -49,9 +50,29 @@ export default function Students() {
         api.get('/students.php'),
         api.get('/classes.php')
       ])
-      setStudents(studentsRes.data)
+      
+      console.log('Students data:', studentsRes.data)
+      console.log('Classes data:', classesRes.data)
+      
+      // Create a map of class_id to class_name
+      const classMap = {}
+      classesRes.data.forEach(cls => {
+        classMap[cls.id] = cls.class_name
+      })
+      console.log('Class Map:', classMap)
+      
+      // Add class_name to each student
+      const enrichedStudents = studentsRes.data.map(student => ({
+        ...student,
+        class_name: classMap[student.class_id] || 'Unknown Class'
+      }))
+      
+      console.log('Enriched Students:', enrichedStudents)
+      
+      setStudents(enrichedStudents)
       setClasses(classesRes.data)
     } catch (error) {
+      console.error('Load error:', error)
       showMessage('Failed to load data', 'error')
     } finally {
       setLoading(false)
@@ -65,7 +86,7 @@ export default function Students() {
     setTimeout(() => setMsg({ text: '', type: '' }), 3000)
   }
 
-const submit = async () => {
+  const submit = async () => {
     if (!form.name || !form.class_id) {
       showMessage('Please fill in all required fields', 'error')
       return
@@ -90,16 +111,16 @@ const submit = async () => {
       setForm({ name: '', class_id: '', dob: '', phone: '' })
       await load()
     } catch (error) {
+      console.error('Submit error:', error)
       showMessage('Failed to save student', 'error')
     } finally {
       setIsSubmitting(false)
     }
   }
+
   const edit = (s) => {
-    // Format date for input field (YYYY-MM-DD)
     let formattedDob = ''
     if (s.dob) {
-      // If dob has time part, extract only the date
       const datePart = s.dob.split('T')[0]
       formattedDob = datePart
     }
@@ -113,20 +134,16 @@ const submit = async () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Format date for display - FIXES THE T00:00:00.000Z ISSUE
   const formatDate = (dateStr) => {
     if (!dateStr) return '—'
     try {
-      // If it's already in YYYY-MM-DD format
       if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return dateStr
       }
-      // If it has time part, extract only date
       const datePart = dateStr.split('T')[0]
       if (datePart.match(/^\d{4}-\d{2}-\d{2}$/)) {
         return datePart
       }
-      // Try to create date object
       const date = new Date(dateStr)
       if (!isNaN(date.getTime())) {
         const year = date.getFullYear()
@@ -140,13 +157,33 @@ const submit = async () => {
     }
   }
 
-  // Open confirmation dialog
+  // Get unique class names from students for filter buttons
+  const getUniqueClassNames = () => {
+    const classNames = new Set()
+    students.forEach(s => {
+      if (s.class_name && s.class_name !== 'Unknown Class') {
+        classNames.add(s.class_name)
+      }
+    })
+    return Array.from(classNames)
+  }
+
+  // Filter students based on selected class
+  const getFilteredStudents = () => {
+    if (selectedClassFilter === 'all') {
+      return students
+    }
+    return students.filter(s => s.class_name === selectedClassFilter)
+  }
+
+  const filteredStudents = getFilteredStudents()
+  const uniqueClasses = getUniqueClassNames()
+
   const openConfirmDialog = (id, name) => {
     setDeleteTarget({ id, name })
     setShowConfirm(true)
   }
 
-  // Handle delete after confirmation
   const handleDelete = async () => {
     if (!deleteTarget) return
     
@@ -162,7 +199,6 @@ const submit = async () => {
     }
   }
 
-  // Cancel delete
   const cancelDelete = () => {
     setShowConfirm(false)
     setDeleteTarget(null)
@@ -263,7 +299,7 @@ const submit = async () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Top Navigation Bar - WITH MOBILE MENU */}
+      {/* Top Navigation Bar */}
       <nav style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(20px)',
@@ -292,7 +328,6 @@ const submit = async () => {
           </span>
         </div>
 
-        {/* Hamburger Menu Button - FOR MOBILE */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           style={{
@@ -310,7 +345,6 @@ const submit = async () => {
           {isMobileMenuOpen ? '✕' : '☰'}
         </button>
 
-        {/* Desktop Navigation */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -360,7 +394,6 @@ const submit = async () => {
           ))}
         </div>
 
-        {/* Mobile Navigation Menu - DROPDOWN */}
         {isMobileMenuOpen && (
           <div style={{
             position: 'absolute',
@@ -480,7 +513,7 @@ const submit = async () => {
                   opacity: 0.9,
                   fontSize: 'clamp(0.7rem, 1vw, 0.9rem)'
                 }}>
-                  Manage all students and their details
+                  {selectedClassFilter === 'all' ? 'Showing all students' : `Showing ${selectedClassFilter} students`}
                 </p>
               </div>
             </div>
@@ -496,13 +529,13 @@ const submit = async () => {
                 fontWeight: 700,
                 display: 'block'
               }}>
-                {students.length}
+                {filteredStudents.length}
               </span>
               <span style={{
                 fontSize: 'clamp(0.5rem, 0.8vw, 0.7rem)',
                 opacity: 0.9
               }}>
-                Total Students
+                {selectedClassFilter === 'all' ? 'Total Students' : `${selectedClassFilter} Students`}
               </span>
             </div>
           </div>
@@ -670,6 +703,22 @@ const submit = async () => {
                     <option key={c.id} value={c.id}>{c.class_name}</option>
                   ))}
                 </select>
+                {form.class_id && (
+                  <div style={{
+                    fontSize: '0.75rem',
+                    color: '#059669',
+                    marginTop: '2px',
+                    padding: '4px 8px',
+                    background: '#f0fdf4',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>✅</span>
+                    Selected: <strong>{classes.find(c => c.id === parseInt(form.class_id))?.class_name}</strong>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -835,22 +884,95 @@ const submit = async () => {
                 padding: '0.25rem 0.75rem',
                 borderRadius: '20px'
               }}>
-                {students.length} records
+                {filteredStudents.length} records
               </span>
             </div>
 
-            {students.length === 0 ? (
+            {/* Class Filter Buttons - AUTO GENERATED FROM STUDENTS */}
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              marginBottom: '1.25rem',
+              flexWrap: 'wrap',
+              padding: '0.5rem 0'
+            }}>
+              <button
+                onClick={() => setSelectedClassFilter('all')}
+                style={{
+                  padding: '0.5rem 1.25rem',
+                  background: selectedClassFilter === 'all' ? 'linear-gradient(135deg, #059669, #34d399)' : '#f1f5f9',
+                  color: selectedClassFilter === 'all' ? 'white' : '#475569',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: selectedClassFilter === 'all' ? '0 4px 12px rgba(5, 150, 105, 0.3)' : 'none'
+                }}
+              >
+                📊 All ({students.length})
+              </button>
+              
+              {/* Auto-generate buttons for each unique class */}
+              {uniqueClasses.map((className, index) => {
+                const count = students.filter(s => s.class_name === className).length
+                // Different colors for different classes
+                const colors = [
+                  { bg: '#3b82f6', light: '#dbeafe' }, // Blue
+                  { bg: '#f59e0b', light: '#fef3c7' }, // Yellow
+                  { bg: '#8b5cf6', light: '#ede9fe' }, // Purple
+                  { bg: '#ec4899', light: '#fce7f3' }, // Pink
+                  { bg: '#14b8a6', light: '#ccfbf1' }, // Teal
+                  { bg: '#f97316', light: '#ffedd5' }, // Orange
+                  { bg: '#6366f1', light: '#e0e7ff' }, // Indigo
+                ]
+                const colorIndex = index % colors.length
+                const isActive = selectedClassFilter === className
+                
+                return (
+                  <button
+                    key={className}
+                    onClick={() => setSelectedClassFilter(className)}
+                    style={{
+                      padding: '0.5rem 1.25rem',
+                      background: isActive ? colors[colorIndex].bg : colors[colorIndex].light,
+                      color: isActive ? 'white' : colors[colorIndex].bg,
+                      border: isActive ? 'none' : `2px solid ${colors[colorIndex].bg}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.8rem',
+                      transition: 'all 0.3s ease',
+                      boxShadow: isActive ? `0 4px 12px ${colors[colorIndex].bg}40` : 'none'
+                    }}
+                  >
+                    📚 {className} ({count})
+                  </button>
+                )
+              })}
+            </div>
+
+            {filteredStudents.length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '3rem 1.5rem',
                 color: '#94a3b8'
               }}>
-                <div style={{ fontSize: '3rem' }}>👦</div>
+                <div style={{ fontSize: '3rem' }}>
+                  {selectedClassFilter === 'all' ? '👦' : '📚'}
+                </div>
                 <h3 style={{
                   margin: '0.75rem 0 0.5rem 0',
                   color: '#64748b'
-                }}>No Students Found</h3>
-                <p>Start by adding your first student using the form above</p>
+                }}>
+                  {selectedClassFilter === 'all' ? 'No Students Found' : `No ${selectedClassFilter} Students`}
+                </h3>
+                <p>
+                  {selectedClassFilter === 'all' 
+                    ? 'Start by adding your first student using the form above'
+                    : `No students are enrolled in ${selectedClassFilter} class yet`}
+                </p>
               </div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -930,7 +1052,7 @@ const submit = async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((s, i) => (
+                    {filteredStudents.map((s, i) => (
                       <tr key={s.id} style={{
                         transition: 'background 0.2s ease'
                       }}
@@ -986,7 +1108,7 @@ const submit = async () => {
                             fontWeight: 500,
                             display: 'inline-block'
                           }}>
-                            {s.class_name}
+                            {s.class_name || '—'}
                           </span>
                         </td>
                         <td style={{
@@ -1073,12 +1195,9 @@ const submit = async () => {
         </div>
       </div>
 
-      {/* ======================================== */}
-      {/* CUSTOM CONFIRMATION DIALOG */}
-      {/* ======================================== */}
+      {/* Confirmation Dialog */}
       {showConfirm && (
         <>
-          {/* Backdrop */}
           <div
             onClick={cancelDelete}
             style={{
@@ -1094,7 +1213,6 @@ const submit = async () => {
             }}
           />
 
-          {/* Dialog */}
           <div
             style={{
               position: 'fixed',
@@ -1111,7 +1229,6 @@ const submit = async () => {
               animation: 'scaleIn 0.3s ease'
             }}
           >
-            {/* Icon */}
             <div style={{
               width: '64px',
               height: '64px',
@@ -1127,7 +1244,6 @@ const submit = async () => {
               🗑️
             </div>
 
-            {/* Title */}
             <h3 style={{
               textAlign: 'center',
               fontSize: 'clamp(18px, 2.5vw, 20px)',
@@ -1138,7 +1254,6 @@ const submit = async () => {
               Delete Student
             </h3>
 
-            {/* Message */}
             <p style={{
               textAlign: 'center',
               fontSize: 'clamp(13px, 1.5vw, 14px)',
@@ -1150,7 +1265,6 @@ const submit = async () => {
               This action cannot be undone.
             </p>
 
-            {/* Buttons */}
             <div style={{
               display: 'flex',
               gap: '10px',
@@ -1256,7 +1370,6 @@ const submit = async () => {
           }
         }
         
-        /* Mobile Styles */
         @media (max-width: 768px) {
           .desktop-nav {
             display: none !important;
